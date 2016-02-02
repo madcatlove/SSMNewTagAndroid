@@ -54,7 +54,7 @@ public class StdAudioController {
      * @throws IOException
      * @brief svm ««√ƒ∏¶ ªÃæ∆≥Ω¥Ÿ.
      */
-    public String getSvmFeature(int channel) throws IOException {
+    public String getSvmFeature(int channel, String label) throws IOException {
         WavReader mWavReader = new WavReader();
         // input wav ∆ƒ¿œ ≥°±Ó¡ˆ ¿–æÓµÈ¿”
         double[] mixedData = mWavReader.read(this.filePath);
@@ -147,8 +147,7 @@ public class StdAudioController {
                 prefix++;
             }
         }
-        svmFeature = "+1 " + svmFeature;
-        System.out.println("SVM Feature: " + svmFeature);
+        svmFeature = label + " " + svmFeature;
 
         return svmFeature;
 

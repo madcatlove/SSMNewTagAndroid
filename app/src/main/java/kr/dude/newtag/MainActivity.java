@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity  {
     Button recordStartBtn, recordStopBtn;
     Button playMediaBtn, play_recordBtn;
     Button btnSvmTrain, btnSvmPredict;
+    Button btnUpload;
     AudioRecorder audioRecorder;
     AudioPlayer audioPlayer;
     AudioController audioController;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity  {
         play_recordBtn = (Button) findViewById(R.id.btn_playController);
         btnSvmTrain = (Button) findViewById(R.id.btn_svmtrain);
         btnSvmPredict = (Button) findViewById(R.id.btn_svmpredict);
+        btnUpload = (Button) findViewById(R.id.btn_upload);
     }
 
 
@@ -122,6 +124,17 @@ public class MainActivity extends AppCompatActivity  {
                 catch(IOException e) {
                     e.printStackTrace();
                 }
+            }
+        });
+
+
+
+        btnUpload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                audioController.playSoundAndRecord();
+
             }
         });
 

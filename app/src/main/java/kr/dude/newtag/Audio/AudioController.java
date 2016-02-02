@@ -8,7 +8,11 @@ import android.widget.Toast;
 import java.io.IOException;
 
 import kr.dude.newtag.AudioAnalyzer.FeatureExtractor;
+import kr.dude.newtag.DataCollector.DataCollectAPI;
 import kr.dude.newtag.R;
+import retrofit.Callback;
+import retrofit.Response;
+import retrofit.Retrofit;
 
 /**
  * Created by madcat on 1/17/16.
@@ -83,14 +87,30 @@ public class AudioController {
         @Override
         public void executeTaskOnRecorderStopped(String filePath) {
 
+            /* SVM 피쳐 생성 */
             final String p = filePath;
             Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         FeatureExtractor fe = new FeatureExtractor();
-                        String svmString = fe.getSvmFeature(p);
+                        String svmString = fe.getSvmFeature(p, "-1");
                         Log.e(LOG_TAG, svmString);
+
+
+                        /* 서버에 데이터 전송 */
+                        DataCollectAPI api = new DataCollectAPI();
+                        api.sendData("feature3_test.txt", svmString, new Callback<String>() {
+                            @Override
+                            public void onResponse(Response<String> response, Retrofit retrofit) {
+                                Log.d(LOG_TAG, " Success Upload!! ");
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+
+                            }
+                        });
 
                     }
                     catch(IOException e) {
@@ -98,7 +118,6 @@ public class AudioController {
                     }
                 }
             });
-
             Log.i(LOG_TAG, " START FEATURE_EXTRACTOR :: filePath : " + p );
             t.start();
 
