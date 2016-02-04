@@ -15,47 +15,22 @@
 
 
     <Button
-        android:id="@+id/btn_startRecord"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="START RECORD" />
-
-    <Button
-        android:id="@+id/btn_stopRecord"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="STOP RECORD" />
-
-    <Button
-        android:id="@+id/btn_playMedia"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Play media" />
-
-    <Button
         android:id="@+id/btn_playController"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="PLAY + RECORD" />
 
     <Button
-        android:id="@+id/btn_svmtrain"
+        android:id="@+id/btn_stop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="SVM_TRAIN"/>
-
-    <Button
-        android:id="@+id/btn_svmpredict"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="SVM_PREDICT" />
+        android:text="STOP!!!!" />
 
 
-    <Button
-        android:id="@+id/btn_upload"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="uploadFile" />
+    <TextView
+        android:id="@+id/status_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 
 </LinearLayout>

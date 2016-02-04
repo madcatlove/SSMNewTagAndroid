@@ -26,6 +26,12 @@ public class AudioPlayer {
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
+
+                if( mediaPlayer != null) {
+                    mediaPlayer.stop();
+                    mediaPlayer.release();
+                }
+
                 if( callback != null) {
                     callback.afterExecution();
                 }

@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import kr.dude.newtag.Constant;
+
 /**
  * Created by madcat on 1/13/16.
  */
@@ -128,7 +130,7 @@ public class AudioRecorder {
 
         String currentDateStr = (new SimpleDateFormat("yyyy-MM-dd_HH_mm_ss")).format(new Date());
 
-        final String FILE_DIR = Environment.getExternalStorageDirectory() + "/newTag/";
+        final String FILE_DIR = Constant.getSdcardPath() + "/newTag/";
         final String FILE_NAME = "" + currentDateStr + ".wav";
         final String FILE_TEMP_NAME = "" + FILE_NAME + "_temp";
 
