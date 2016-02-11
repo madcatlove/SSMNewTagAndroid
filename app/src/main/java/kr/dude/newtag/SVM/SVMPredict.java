@@ -10,10 +10,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-import libsvm.svm;
-import libsvm.svm_model;
-import libsvm.svm_node;
-import libsvm.svm_parameter;
+import kr.dude.newtag.libsvm.svm;
+import kr.dude.newtag.libsvm.svm_model;
+import kr.dude.newtag.libsvm.svm_node;
+import kr.dude.newtag.libsvm.svm_parameter;
+
 
 /**
  * Created by madcat on 1/27/16.
@@ -118,6 +119,8 @@ public class SVMPredict {
                     output.writeBytes(prob_estimates[j] + " ");
                 output.writeBytes("\n");
             } else {
+
+                // @TODO : 예측 결과에 따른 SUM값 추출
                 v = svm.svm_predict(model, x);
                 output.writeBytes(v + "\n");
             }

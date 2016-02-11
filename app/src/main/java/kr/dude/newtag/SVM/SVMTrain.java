@@ -9,11 +9,11 @@ import java.util.Date;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import libsvm.svm;
-import libsvm.svm_model;
-import libsvm.svm_node;
-import libsvm.svm_parameter;
-import libsvm.svm_problem;
+import kr.dude.newtag.libsvm.svm;
+import kr.dude.newtag.libsvm.svm_model;
+import kr.dude.newtag.libsvm.svm_node;
+import kr.dude.newtag.libsvm.svm_parameter;
+import kr.dude.newtag.libsvm.svm_problem;
 
 /**
  * Created by madcat on 1/27/16.

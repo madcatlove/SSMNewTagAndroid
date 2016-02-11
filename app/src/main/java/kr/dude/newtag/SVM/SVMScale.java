@@ -1,9 +1,9 @@
 package kr.dude.newtag.SVM;
 
-import libsvm.svm;
-import libsvm.svm_model;
-import libsvm.svm_parameter;
-import libsvm.svm_problem;
+import kr.dude.newtag.libsvm.svm;
+import kr.dude.newtag.libsvm.svm_model;
+import kr.dude.newtag.libsvm.svm_node;
+import kr.dude.newtag.libsvm.svm_parameter;
 
 /**
  * Created by madcat on 1/27/16.

@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity  {
     AudioPlayer audioPlayer;
     AudioController audioController;
 
-    int target = 100;
+    int target = 10;
     int current = 0;
     PowerManager.WakeLock wakeLock = null;
     PowerManager pm = null;
