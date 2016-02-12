@@ -2,6 +2,7 @@ package kr.dude.newtag.Audio;
 
 import android.content.Context;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
@@ -62,11 +63,14 @@ public class AudioController {
         Runnable playSoundThread = new Runnable() {
             @Override
             public void run() {
+                Log.i(LOG_TAG, " Execute playSound() ");
                 playSound();
             }
         };
 
         handler.postDelayed(playSoundThread, DELAY_TIME);
+
+
 
     }
 
@@ -137,47 +141,15 @@ public class AudioController {
 
             /* SVM 피쳐 생성 */
             final String p = filePath;
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-//                    try {
-//                        FeatureExtractor fe = new FeatureExtractor();
-//                        String svmString = fe.getSvmFeature(p, "-1");
-//                        Log.e(LOG_TAG, svmString);
-//
-//
-//                        /* 서버에 데이터 전송 */
-//                        DataCollectAPI api = new DataCollectAPI();
-//                        api.sendData("feature3_test.txt", svmString, new Callback<String>() {
-//                            @Override
-//                            public void onResponse(Response<String> response, Retrofit retrofit) {
-//                                Log.d(LOG_TAG, " Success Upload!! ");
-//                            }
-//
-//                            @Override
-//                            public void onFailure(Throwable t) {
-//
-//                            }
-//                        });
 
-                        /* Controller 잠금 해제 */
-                        setRunningState(false);
+            setRunningState(false);
 
-                        /* onCompleteExecution 콜백 실행 */
-                        if( onCompleteExecution != null) {
-                            onCompleteExecution.execute(null);
-                        }
+            /* onCompleteExecution 콜백 실행 */
+            if (onCompleteExecution != null) {
+                onCompleteExecution.execute(null);
+            }
 
-//                    }
-//                    catch(IOException e) {
-//                        e.printStackTrace();
-//                    }
-
-
-                }
-            });
-            Log.i(LOG_TAG, " START FEATURE_EXTRACTOR :: filePath : " + p );
-            t.start();
+            Log.i(LOG_TAG, " START FEATURE_EXTRACTOR :: filePath : " + p);
 
         }
     }

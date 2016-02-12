@@ -8,6 +8,8 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import kr.dude.newtag.libsvm.svm;
@@ -37,7 +39,7 @@ public class SVMPredict {
         this.predict_probability = predict_probability;
     }
 
-    public void doPredict() throws IOException {
+    public List<Double> doPredict() throws IOException {
         BufferedReader input = new BufferedReader(new FileReader(testFileName));
         DataOutputStream output = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFileName)));
         svm_model model = svm.svm_load_model(modelFileName);
@@ -47,23 +49,25 @@ public class SVMPredict {
             throw new RuntimeException("can't open model file " + modelFileName);
         }
 
-        if (predict_probability == 1) {
-            if (svm.svm_check_probability_model(model) == 0) {
-                LOG("Model does not support probabiliy estimates");
-                return;
-            }
-        } else {
-            if (svm.svm_check_probability_model(model) != 0) {
-                LOG("Model supports probability estimates, but disabled in prediction.");
-            }
-        }
+//        if (predict_probability == 1) {
+//            if (svm.svm_check_probability_model(model) == 0) {
+//                LOG("Model does not support probabiliy estimates");
+//                return;
+//            }
+//        } else {
+//            if (svm.svm_check_probability_model(model) != 0) {
+//                LOG("Model supports probability estimates, but disabled in prediction.");
+//            }
+//        }
 
 
 
         // start predict
-        predict(input,output,model,predict_probability);
+        List<Double> a = predict(input,output,model,predict_probability);
         input.close();
         output.close();
+
+        return a;
     }
 
     private void LOG(String message) {
@@ -71,8 +75,10 @@ public class SVMPredict {
     }
 
 
-    private void predict(BufferedReader input, DataOutputStream output, svm_model model, int predict_probability)
+    private List<Double> predict(BufferedReader input, DataOutputStream output, svm_model model, int predict_probability)
             throws IOException {
+
+        ArrayList<Double> sumArray = new ArrayList<Double>();
 
         int correct = 0;
         int total = 0;
@@ -82,6 +88,13 @@ public class SVMPredict {
         int svm_type = svm.svm_get_svm_type(model);
         int nr_class = svm.svm_get_nr_class(model);
         double[] prob_estimates = null;
+
+
+        if( svm_type != svm_parameter.ONE_CLASS  ) {
+            Log.e(LOG_TAG, "NOT ONE_CLASS MODEL!! ");
+            return sumArray;
+        }
+
 
         if (predict_probability == 1) {
             if (svm_type == svm_parameter.EPSILON_SVR || svm_type == svm_parameter.NU_SVR) {
@@ -122,11 +135,13 @@ public class SVMPredict {
 
                 // @TODO : 예측 결과에 따른 SUM값 추출
                 v = svm.svm_predict(model, x);
+                sumArray.add(v);
                 output.writeBytes(v + "\n");
             }
 
             if (v == target)
                 ++correct;
+
             error += (v - target) * (v - target);
             sumv += v;
             sumy += target;
@@ -135,15 +150,17 @@ public class SVMPredict {
             sumvy += v * target;
             ++total;
         }
-        if (svm_type == svm_parameter.EPSILON_SVR || svm_type == svm_parameter.NU_SVR) {
-            LOG("Mean squared error = " + error / total + " (regression)\n");
-            LOG("Squared correlation coefficient = " +
-                    ((total * sumvy - sumv * sumy) * (total * sumvy - sumv * sumy)) /
-                            ((total * sumvv - sumv * sumv) * (total * sumyy - sumy * sumy)) +
-                    " (regression)\n");
-        } else
-            LOG("Accuracy = " + (double) correct / total * 100 +
-                    "% (" + correct + "/" + total + ") (classification)\n");
+//        if (svm_type == svm_parameter.EPSILON_SVR || svm_type == svm_parameter.NU_SVR) {
+//            LOG("Mean squared error = " + error / total + " (regression)\n");
+//            LOG("Squared correlation coefficient = " +
+//                    ((total * sumvy - sumv * sumy) * (total * sumvy - sumv * sumy)) /
+//                            ((total * sumvv - sumv * sumv) * (total * sumyy - sumy * sumy)) +
+//                    " (regression)\n");
+//        } else
+//            LOG("Accuracy = " + (double) correct / total * 100 +
+//                    "% (" + correct + "/" + total + ") (classification)\n");
+
+        return sumArray;
     }
 
 

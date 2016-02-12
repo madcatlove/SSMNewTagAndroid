@@ -142,8 +142,8 @@ public class AudioRecorder {
 
             //--------------------------------------------------------------------------------------
             // 임시파일 작성
-            FileOutputStream tempFileOpen =
-                    new FileOutputStream(new File( FILE_DIR + FILE_TEMP_NAME));
+            FileOutputStream tempFileOpen = new FileOutputStream(new File( FILE_DIR + FILE_TEMP_NAME));
+            Log.i(LOG_TAG, " :::::: 1. CREATE TEMP_FILE ::  " + FILE_DIR + FILE_TEMP_NAME);
 
             // 녹음중일때만..
             int read = 0;
@@ -166,6 +166,7 @@ public class AudioRecorder {
             // 실제 WAVE 파일 작성 ( 헤더 + TEMP파일 읽기 )
             FileInputStream tempFIS = new FileInputStream(new File(FILE_DIR + FILE_TEMP_NAME));
             FileOutputStream  dataFOS = new FileOutputStream(new File(FILE_DIR + FILE_NAME));
+            Log.i(LOG_TAG, " :::::: 2. CREATE WAVE_FILE ::  " + FILE_DIR + FILE_TEMP_NAME);
 
             read = 0;
 
@@ -182,10 +183,15 @@ public class AudioRecorder {
             dataFOS.close();
             //--------------------------------------------------------------------------------------
 
-            Log.i(LOG_TAG, "Complete file write wave file " + FILE_DIR + FILE_NAME);
+            Log.i(LOG_TAG, " :::::: 3. Complete file write wave file " + FILE_DIR + FILE_NAME);
 
             /* 파일 디렉토리 갱신 */
             recentFilePath = FILE_DIR + FILE_NAME;
+
+            /* 임시파일 제거 */
+            File tFile = new File(FILE_DIR + FILE_TEMP_NAME);
+            boolean r = tFile.delete();
+            Log.w(LOG_TAG, " :::::: 4. REMOVE :: " + FILE_TEMP_NAME + " ==> " + r);
 
         } catch (IOException e) {
             Log.e(LOG_TAG, "There is no file " + FILE_DIR + FILE_NAME);

@@ -24,22 +24,20 @@ public class SVMTrain {
     private svm_parameter param;		// set by parse_command_line
     private svm_problem prob;		// set by read_problem
     private svm_model model;
-    private String input_file_name;		// set by parse_command_line
     private String model_file_name;		// set by parse_command_line
     private String error_msg;
     private int cross_validation;
     private int nr_fold;
-    private String fileDirPath;
 
 
     public SVMTrain() {
         /* 파라메터 기본값 */
         svm_parameter param = new svm_parameter();
 
-        param.svm_type = svm_parameter.C_SVC;
-        param.kernel_type = svm_parameter.RBF;
+        param.svm_type = svm_parameter.ONE_CLASS;
+        param.kernel_type = svm_parameter.POLY;
         param.degree = 3;
-        param.gamma = 0.03125;	// 1/num_features
+        param.gamma = 0.00625;	// 1/num_features
         param.coef0 = 0;
         param.nu = 0.5;
         param.cache_size = 100;
@@ -52,8 +50,8 @@ public class SVMTrain {
         param.weight_label = new int[0];
         param.weight = new double[0];
 
-        cross_validation = 1;
-        nr_fold = 5;
+        cross_validation = 0;
+        nr_fold = 1;
 
         setSVMParam(param);
     }
@@ -66,10 +64,6 @@ public class SVMTrain {
         this.param = param;
     }
 
-    public void setFileDirPath(String dirPath) {
-        LOG("dirPath :: " + dirPath);
-        fileDirPath = dirPath;
-    }
 
     public void setModelFileName(String modelFileName) {
         model_file_name = modelFileName;
@@ -77,7 +71,7 @@ public class SVMTrain {
 
     public SVMTrain loadProblem(String input_file_name) throws IOException {
 
-        BufferedReader fp = new BufferedReader(new FileReader(fileDirPath + input_file_name));
+        BufferedReader fp = new BufferedReader(new FileReader(input_file_name));
         Vector<Double> vy = new Vector<Double>();
         Vector<svm_node[]> vx = new Vector<svm_node[]>();
         int max_index = 0;
@@ -156,7 +150,7 @@ public class SVMTrain {
                 model = svm.svm_train(prob, param);
 
                 LOG(" SVAE SVM MODEL !! " );
-                svm.svm_save_model(fileDirPath + model_file_name, model);
+                svm.svm_save_model(model_file_name, model);
             }
         }
         catch(IOException e) {

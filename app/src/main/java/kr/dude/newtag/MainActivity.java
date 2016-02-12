@@ -23,6 +23,8 @@ import kr.dude.newtag.Audio.AudioRecorder;
 import kr.dude.newtag.SVM.SVMPredict;
 import kr.dude.newtag.SVM.SVMTrain;
 import kr.dude.newtag.SVM.Util;
+import kr.dude.newtag.Sense.PredictController;
+import kr.dude.newtag.Sense.SenseController;
 
 public class MainActivity extends AppCompatActivity  {
 
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity  {
 
     Button play_recordBtn;
     Button stopBtn;
+    Button btnSvmTrain, btnSvmPredict;
     TextView status_view;
 
     AudioRecorder audioRecorder;
@@ -55,6 +58,8 @@ public class MainActivity extends AppCompatActivity  {
         play_recordBtn = (Button) findViewById(R.id.btn_playController);
         status_view = (TextView) findViewById(R.id.status_view);
         stopBtn = (Button) findViewById(R.id.btn_stop);
+        btnSvmTrain = (Button) findViewById(R.id.btn_svm_train);
+        btnSvmPredict = (Button) findViewById(R.id.btn_svm_predict);
     }
 
 
@@ -117,6 +122,22 @@ public class MainActivity extends AppCompatActivity  {
             public void onClick(View v) {
                 finish();
                 target = -1;
+            }
+        });
+
+        btnSvmTrain.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SenseController s = new SenseController(MainActivity.this);
+                s.doSense();
+            }
+        });
+
+        btnSvmPredict.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PredictController p = new PredictController(MainActivity.this);
+                p.doPredict();
             }
         });
 

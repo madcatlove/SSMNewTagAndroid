@@ -1812,7 +1812,7 @@ public class svm {
                 }
             }
         }
-        sigmoid_train(prob.l,dec_values,prob.y,probAB);
+        sigmoid_train(prob.l, dec_values, prob.y, probAB);
     }
 
     // Return parameter of a Laplace distribution
@@ -2330,8 +2330,12 @@ public class svm {
             sum -= model.rho[0];
             dec_values[0] = sum;
 
-            if(model.param.svm_type == svm_parameter.ONE_CLASS)
-                return (sum>0)?1:-1;
+            /* SUM 값을 그냥 리턴 */
+            if(model.param.svm_type == svm_parameter.ONE_CLASS) {
+                System.out.println("SVM.java ==> sum :: " + sum);
+                return sum;
+//                return (sum > 0) ? 1 : -1;
+            }
             else
                 return sum;
         }

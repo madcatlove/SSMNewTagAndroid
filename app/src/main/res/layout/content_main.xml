@@ -26,6 +26,18 @@
         android:layout_height="wrap_content"
         android:text="STOP!!!!" />
 
+    <Button
+    android:id="@+id/btn_svm_train"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="SVM_TRAIN" />
+
+    <Button
+        android:id="@+id/btn_svm_predict"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SVM_PREDICT" />
+
 
     <TextView
         android:id="@+id/status_view"
