@@ -8,8 +8,13 @@ package kr.dude.newtag.Sense;
 import android.content.Context;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import kr.dude.newtag.Audio.AudioController;
 import kr.dude.newtag.Constant;
@@ -59,6 +64,8 @@ public class SenseController {
                 Log.i(LOG_TAG, " Complete current :: " + current);
                 current++;
 
+//                Toast.makeText(mContext, String.format("Complete %d/%d", current, target), Toast.LENGTH_SHORT).show();
+
                 if( current > target ) {
                     while(audioController.isRunning()) {;}
                     _doSense();
@@ -101,7 +108,12 @@ public class SenseController {
         prod.makeTrainSet();
 
 
-        /* SVM Training && Model 생성 */
+
+        /* 트레이닝셋끼리 값 주고받음. */
+        SenseEnvironment.trainsetMixer(TRAINING_DIR, TRAINING_FILE_NAME);
+
+
+        /* 방금 생성된 피쳐 SVM Training && Model 생성 */
         Log.i(LOG_TAG, " SVM TRAINING && MAKE MODEL ");
         final String SCALE_FILE_NAME = String.format("training%d.train.scale", modelNum);
         final String MODEL_FILE_NAME = String.format("model%d.model", modelNum);
@@ -122,9 +134,41 @@ public class SenseController {
         }
 
 
+        /* 이전에 생성된 트레이닝 파일이 변경되었으므로 모델 재생성 */
+        List<File> oldTrainSet = SenseEnvironment.getAllTrainFiles(TRAINING_DIR);
+        for( File oldTrainFile : oldTrainSet) {
+            if( oldTrainFile.getName().equals(TRAINING_FILE_NAME) ) {
+                // 방금전에 생성된 파일이므로 패스
+                continue;
+            }
+
+            // 모델번호 추출해옴
+            final String regex = "^training(\\d+)\\.train$";
+            Pattern p = Pattern.compile(regex);
+            Matcher mat = p.matcher(oldTrainFile.getName());
+
+            if(mat.find()) {
+                int _modelNum = Integer.valueOf( mat.group(1) );
+                try {
+                    String OVERWRITE_MODEL_NAME = String.format("model%d.model", _modelNum);
+
+                    SVMTrain svmTrain = new SVMTrain();
+                    svmTrain.setModelFileName(MODEL_DIR + OVERWRITE_MODEL_NAME);
+                    svmTrain.loadProblem(TRAINING_DIR + oldTrainFile.getName());
+                    svmTrain.doTrain();
+                }
+                catch(IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+
+        }
+
+
         /* 웨이브파일 모두 삭제 */
         SenseEnvironment.removeAllWavFiles(RECORDED_DIR);
-        SenseEnvironment.removeAllFilesWithExtension(RECORDED_DIR, ".train");
-        SenseEnvironment.removeAllFilesWithExtension(RECORDED_DIR, ".scale");
+//        SenseEnvironment.removeAllFilesWithExtension(RECORDED_DIR, ".train");
+//        SenseEnvironment.removeAllFilesWithExtension(RECORDED_DIR, ".scale");
     }
 }

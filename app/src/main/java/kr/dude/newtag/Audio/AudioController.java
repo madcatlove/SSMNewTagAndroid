@@ -117,7 +117,6 @@ public class AudioController {
                 @Override
                 public void run() {
                     audioRecorder.stopRecord();
-                    Toast.makeText(mContext, " COMPLETE!!! ", Toast.LENGTH_SHORT).show();
 
                 }
             };

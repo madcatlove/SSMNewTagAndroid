@@ -58,6 +58,23 @@ public class SenseEnvironment {
         return a;
     }
 
+
+    /* path내 train 파일 리스트 반환 */
+    public static List<File> getAllTrainFiles(String path) {
+        ArrayList<File> a = new ArrayList<File>();
+
+        File dir = new File(path);
+        File[] fileList = dir.listFiles();
+        for (File f : fileList) {
+            if (f.isFile() && f.getName().endsWith(".train")) {
+                a.add(f);
+            }
+        }
+
+        return a;
+    }
+
+
     /* 가장 최근 모델 번호를 가져옴 */
     public static int getRecentModelNumber() {
         try {
@@ -105,6 +122,11 @@ public class SenseEnvironment {
         }
     }
 
+    /* Model 서로 쓰레기값 교환 */
+    public static void trainsetMixer(String dirPath, String targetFile) {
+        TrainsetMixer tm = new TrainsetMixer();
+        tm.trainsetMix(dirPath, targetFile);
+    }
 
 
 
