@@ -27,6 +27,9 @@ public class FeatureExtractor2 {
     private static final int MONO = 1;
     private static final int STEREO = 2;
 
+    private static final int START_SAMPLE = 10000;
+    private static final int END_SAMPLE = 25000;
+
     private String filePath = "";
     private String label; // SVM 레이블
 
@@ -50,8 +53,9 @@ public class FeatureExtractor2 {
      * @brief svm 피쳐를 뽑아낸다.
      * @return
      * @throws IOException
+     * @throws ExtractException
      */
-    public String getSvmFeature(int channel) throws IOException {
+    public String getSvmFeature(int channel) throws IOException, ExtractException {
         WavReader mWavReader = new WavReader();
         // input wav 파일 끝까지 읽어들임
         double[] mixedData = mWavReader.read(this.filePath);
@@ -74,8 +78,8 @@ public class FeatureExtractor2 {
 
         // 최초 11kHz에 대한 싱크를 얻어옴
         // int syncIdx = getSync(leftData, 0, leftData.length, 1);
-        int leftSync = getSync(fLeftData, 10000, 25000, 1);
-        int rightSync = getSync(fRightData, 10000, 25000, 1);
+        int leftSync = getSync(fLeftData, START_SAMPLE, END_SAMPLE, 1);
+        int rightSync = getSync(fRightData, START_SAMPLE, END_SAMPLE, 1);
 
         System.out.println("최초 left 	11kHz 싱크 : " + leftSync);
         System.out.println("최초 right 	11kHz 싱크 : " + rightSync);
@@ -193,6 +197,7 @@ public class FeatureExtractor2 {
         // 좌측
         for (int i = 0; i < LfftFeatures.size(); i++) {
             double[] fftFeature = LfftFeatures.get(i);
+
             // 22050Hz가 256개의 점에 대응되므로 1개의 점에 약 86Hz가 할당된다. -10을 해주는 이유는 17kHz -
             // 86*10Hz부터 svm벡터로 삽입하기 위함이다.
             int startPos = 0, endPos = 0;
@@ -214,6 +219,7 @@ public class FeatureExtractor2 {
                     endPos = arrTargetFreqSamplePos[FREQ_20] + 10;
                     break;
             }
+            normalize(fftFeature, startPos, endPos);
             for (int j = startPos; j < endPos; j++) {
                 svmFeature = svmFeature + Integer.toString(prefix) + ":" + Double.toString(fftFeature[j]) + " ";
                 prefix++;
@@ -223,8 +229,8 @@ public class FeatureExtractor2 {
         // 우측
         for (int i = 0; i < RfftFeatures.size(); i++) {
             double[] fftFeature = RfftFeatures.get(i);
-            // 22050Hz가 256개의 점에 대응되므로 1개의 점에 약 86Hz가 할당된다. -6을 해주는 이유는 17kHz -
-            // 86*6Hz부터 svm벡터로 삽입하기 위함이다.
+            // 22050Hz가 256개의 점에 대응되므로 1개의 점에 약 86Hz가 할당된다. -10을 해주는 이유는 17kHz -
+            // 86*10Hz부터 svm벡터로 삽입하기 위함이다.
             int startPos = 0, endPos = 0;
             switch (i) {
                 case FREQ_12:
@@ -244,6 +250,7 @@ public class FeatureExtractor2 {
                     endPos = arrTargetFreqSamplePos[FREQ_20] + 10;
                     break;
             }
+            normalize(fftFeature, startPos, endPos);
             for (int j = startPos; j < endPos; j++) {
                 svmFeature = svmFeature + Integer.toString(prefix) + ":" + Double.toString(fftFeature[j]) + " ";
                 prefix++;
@@ -325,8 +332,9 @@ public class FeatureExtractor2 {
      * @param gap
      *            : 탐색 gap
      * @return
+     * @throws ExtractException
      */
-    private int getSync(double[] input, int start, int end, int gap) {
+    private int getSync(double[] input, int start, int end, int gap) throws ExtractException {
         int fftcnt = 0;
         // fft 결과에서 특정 주파수 대역대에 해당하는 value들의 합을 저장할 배열
         // double fftResults[][] = new double[5][input.length];
@@ -357,18 +365,43 @@ public class FeatureExtractor2 {
             }
         }
         System.out.println("FFT count: " + fftcnt);
+
+        if(maxIdx > END_SAMPLE || maxIdx < START_SAMPLE){
+            throw new ExtractException("ERROR :: getSync() is failed - maxIdx > END_SAMPLE || maxIdx < START_SAMPLE");
+        }
+
         return maxIdx;
+    }
+    public void normalize(double[] input, int startIdx, int endIdx) throws ExtractException{
+        int maxIdx=0;
+        double maxValue=0;
+
+        for(int i=startIdx;i<endIdx;i++){
+            input[i] = input[i] / WINDOW_SIZE;
+        }
+
+        maxIdx = getMaxIdx(input, startIdx, endIdx);
+        maxValue = input[maxIdx];
+        for(int i=startIdx;i<endIdx;i++){
+            input[i] = input[i] / maxValue;
+        }
+        return;
     }
 
     // sync 이후 소리 최대값을 나타내는 점을 잡아낸다.
-    public int getMaxIdx(double[] input, int startIdx, int endIdx) {
+    public int getMaxIdx(double[] input, int startIdx, int endIdx) throws ExtractException {
         int maxIdx = 0;
         double maxValue = 0;
-        for (int i = startIdx; i < endIdx; i++) {
-            if (input[i] >= maxValue) {
-                maxIdx = i;
-                maxValue = input[i];
+        try{
+            for (int i = startIdx; i < endIdx; i++) {
+                if (input[i] >= maxValue) {
+                    maxIdx = i;
+                    maxValue = input[i];
+                }
             }
+        }catch(IndexOutOfBoundsException e){
+            throw new ExtractException("ERROR :: getMaxIdx() is failed - IndexOutOfBoundsException"
+                    + ", startIdx :: "+startIdx + ", endIdx :: "+endIdx);
         }
 
         return maxIdx;

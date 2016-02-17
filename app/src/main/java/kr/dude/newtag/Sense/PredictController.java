@@ -1,6 +1,9 @@
 package kr.dude.newtag.Sense;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.os.Looper;
 import android.util.Log;
 
 import java.io.File;
@@ -60,7 +63,7 @@ public class PredictController {
     }
 
     private void _doPredict() {
-
+        String sum_arr = "";
         /* SVM 피처 생성 */
         Log.i(LOG_TAG, " EXTRACT SVM FEATURE ");
         final String TRAINING_FILE_NAME = String.format("tempFeature.test");
@@ -79,6 +82,7 @@ public class PredictController {
 
             /* 모델 파일을 하나씩 순회하면서 근접값 출력 */
             List<File> models = SenseEnvironment.getAllModelFiles(MODEL_DIR);
+
             for(int i = 0; i < models.size(); i++) {
                 String modelName = models.get(i).getName();
 //                SVMPredict p = new SVMPredict(MODEL_DIR+modelName, TRAINING_DIR + SCALE_FILE_NAME, TRAINING_DIR + "output.test");
@@ -89,6 +93,8 @@ public class PredictController {
                 if( result.size() == 1) {
                     double fSum = result.get(0);
                     Log.i(LOG_TAG, " Model : " + modelName + " :: SUM :: " + fSum);
+                    String sum_data = new String(modelName + " : " + fSum +"\n");
+                    sum_arr = sum_arr.concat(sum_data);
                 }
             }
 
@@ -103,5 +109,18 @@ public class PredictController {
         SenseEnvironment.removeAllWavFiles(RECORDED_DIR);
         SenseEnvironment.removeAllFilesWithExtension(RECORDED_DIR, ".test");
         SenseEnvironment.removeAllFilesWithExtension(RECORDED_DIR, ".scale");
+
+        Looper.prepare();
+        AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
+        alert.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();     //닫기
+            }
+        });
+        alert.setMessage(sum_arr);
+        alert.show();
+        Looper.loop();
+
     }
 }

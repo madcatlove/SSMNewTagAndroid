@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import kr.dude.newtag.AudioAnalyzer.ExtractException;
 import kr.dude.newtag.AudioAnalyzer.FeatureExtractor2;
 
 /**
@@ -139,7 +140,7 @@ public class ProductSVMTrainSet {
                 String data = fe.getSvmFeature(2);
                 stringAppend(data);
             }
-            catch(IOException e) {
+            catch(IOException | ExtractException e) {
                 e.printStackTrace();
             }
         }
