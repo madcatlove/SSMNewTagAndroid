@@ -15,34 +15,23 @@
 
 
     <Button
-        android:id="@+id/btn_playController"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="PLAY + RECORD" />
-
-    <Button
-        android:id="@+id/btn_stop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="STOP!!!!" />
-
-    <Button
     android:id="@+id/btn_svm_train"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="SVM_TRAIN" />
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
+    android:text="SVM TRAIN" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_margin="10dp" />
 
     <Button
         android:id="@+id/btn_svm_predict"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="SVM_PREDICT" />
-
-
-    <TextView
-        android:id="@+id/status_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="70dp"
+        android:text="SVM PREDICT" />
+
+
 
 
 </LinearLayout>

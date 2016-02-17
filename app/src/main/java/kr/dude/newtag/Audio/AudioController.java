@@ -79,7 +79,7 @@ public class AudioController {
      */
     private void playSound() {
         if( audioPlayer != null) {
-            audioPlayer.playSound(R.raw.new_input_signal_1, audioCompleteCallback);
+            audioPlayer.playSound(R.raw.input_signal, audioCompleteCallback);
 
         }
     }
@@ -121,8 +121,9 @@ public class AudioController {
                 }
             };
 
-            Handler handler = new Handler(Looper.getMainLooper());
+            Handler handler = new Handler();
             handler.postDelayed(stopSoundThread, DELAY_TIME);
+
 
         }
     }

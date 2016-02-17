@@ -6,6 +6,8 @@ package kr.dude.newtag.Sense;
 
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Toast;
@@ -35,11 +37,19 @@ public class SenseController {
     private String TRAINING_DIR;
     private AudioController audioController;
     private Context mContext;
+    private SenseListener mSenseListener;
+
+    private Handler mHandler;
 
 
     /* 녹음 셋트 */
     private int current = 1;
     private static final int target = 10;
+
+    public static interface SenseListener {
+        public void updateProgress(Integer precent, String message); // 업데이트 메세지
+    }
+
 
     public SenseController(Context context) {
         MODEL_DIR = Constant.getSdcardPath() + "/newTag/";
@@ -49,6 +59,13 @@ public class SenseController {
         mContext = context;
 
         current = 1;
+    }
+
+
+    public void setSenseListener(SenseListener sl) {
+        mSenseListener = sl;
+
+        mHandler = new Handler(Looper.getMainLooper());
     }
 
 
@@ -83,6 +100,18 @@ public class SenseController {
                     Log.e(LOG_TAG, " >>>>> CURRENT :: " + current);
                     audioController.playSoundAndRecord();
 
+                    /* MESSAGE LOG */
+                    if(mSenseListener != null) {
+
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                mSenseListener.updateProgress(1, " 소리 녹음중 ... " + String.format("%d/%d", current, target));
+                            }
+                        });
+
+                    }
+
                     if( current >= target) break;
                 }
             }
@@ -99,6 +128,15 @@ public class SenseController {
         /* 모델번호 획득 */
         int modelNum = SenseEnvironment.getRecentModelNumber() + 1;
 
+        /************************* MESSAGE LOG *************************/
+        if(mSenseListener != null) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mSenseListener.updateProgress(30, " 트레이닝 파일 생성중.. ");
+                }
+            });
+        }
 
         /* SVM 피처 생성 */
         Log.i(LOG_TAG, " EXTRACT SVM FEATURE ");
@@ -107,6 +145,17 @@ public class SenseController {
         prod.setSaveFilePath(TRAINING_DIR + TRAINING_FILE_NAME);
         prod.makeTrainSet();
 
+
+        /************************* MESSAGE LOG *************************/
+        if(mSenseListener != null) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mSenseListener.updateProgress(80, " SVM 모델 생성 시작 ");
+                }
+            });
+
+        }
 
 
         /* 트레이닝셋끼리 값 주고받음. */
@@ -133,6 +182,19 @@ public class SenseController {
             e.printStackTrace();
         }
 
+
+
+
+        /************************* MESSAGE LOG *************************/
+        if(mSenseListener != null) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mSenseListener.updateProgress(90, " 잔업중...(정리..) ");
+                }
+            });
+
+        }
 
         /* 이전에 생성된 트레이닝 파일이 변경되었으므로 모델 재생성 */
         List<File> oldTrainSet = SenseEnvironment.getAllTrainFiles(TRAINING_DIR);
@@ -170,5 +232,17 @@ public class SenseController {
         SenseEnvironment.removeAllWavFiles(RECORDED_DIR);
 //        SenseEnvironment.removeAllFilesWithExtension(RECORDED_DIR, ".train");
 //        SenseEnvironment.removeAllFilesWithExtension(RECORDED_DIR, ".scale");
+
+
+        /************************* MESSAGE LOG *************************/
+        if(mSenseListener != null) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mSenseListener.updateProgress(100, " 완료 ");
+                }
+            });
+
+        }
     }
 }

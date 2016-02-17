@@ -8,7 +8,10 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import kr.dude.newtag.Audio.AudioController;
 import kr.dude.newtag.Constant;
@@ -29,6 +32,11 @@ public class PredictController {
     private String TRAINING_DIR;
     private AudioController audioController;
     private Context mContext;
+    private AfterPrediction mAfterPredictionListener;
+
+    public interface AfterPrediction {
+        public void afterPrediction(Map<String,Double> predictList);
+    }
 
 
     public PredictController(Context context) {
@@ -38,6 +46,10 @@ public class PredictController {
         audioController = new AudioController(context);
         mContext = context;
 
+    }
+
+    public void setAfterPredictionListener(AfterPrediction ap) {
+        mAfterPredictionListener = ap;
     }
 
     public void doPredict() {
@@ -63,7 +75,9 @@ public class PredictController {
     }
 
     private void _doPredict() {
-        String sum_arr = "";
+
+        Map<String, Double> predictResult = new HashMap<String,Double>();
+
         /* SVM 피처 생성 */
         Log.i(LOG_TAG, " EXTRACT SVM FEATURE ");
         final String TRAINING_FILE_NAME = String.format("tempFeature.test");
@@ -92,9 +106,8 @@ public class PredictController {
 
                 if( result.size() == 1) {
                     double fSum = result.get(0);
+                    predictResult.put(modelName, fSum);
                     Log.i(LOG_TAG, " Model : " + modelName + " :: SUM :: " + fSum);
-                    String sum_data = new String(modelName + " : " + fSum +"\n");
-                    sum_arr = sum_arr.concat(sum_data);
                 }
             }
 
@@ -110,17 +123,24 @@ public class PredictController {
         SenseEnvironment.removeAllFilesWithExtension(RECORDED_DIR, ".test");
         SenseEnvironment.removeAllFilesWithExtension(RECORDED_DIR, ".scale");
 
-        Looper.prepare();
-        AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
-        alert.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();     //닫기
-            }
-        });
-        alert.setMessage(sum_arr);
-        alert.show();
-        Looper.loop();
+        /* 콜백이 있다면 콜백실행 */
+        if( mAfterPredictionListener != null ) {
+            Looper.prepare();
+            mAfterPredictionListener.afterPrediction(predictResult);
+            Looper.loop();
+        }
+
+//        Looper.prepare();
+//        AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
+//        alert.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+//            @Override
+//            public void onClick(DialogInterface dialog, int which) {
+//                dialog.dismiss();     //닫기
+//            }
+//        });
+//        alert.setMessage(sum_arr);
+//        alert.show();
+//        Looper.loop();
 
     }
 }

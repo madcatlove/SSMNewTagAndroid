@@ -1,6 +1,9 @@
 package kr.dude.newtag;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -12,10 +15,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import kr.dude.newtag.Audio.AudioController;
 import kr.dude.newtag.Audio.AudioPlayer;
@@ -26,13 +32,11 @@ import kr.dude.newtag.SVM.Util;
 import kr.dude.newtag.Sense.PredictController;
 import kr.dude.newtag.Sense.SenseController;
 
-public class MainActivity extends AppCompatActivity  {
+public class MainActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = "MainActivity";
 
 
-    Button play_recordBtn;
-    Button stopBtn;
     Button btnSvmTrain, btnSvmPredict;
     TextView status_view;
 
@@ -45,6 +49,8 @@ public class MainActivity extends AppCompatActivity  {
     PowerManager.WakeLock wakeLock = null;
     PowerManager pm = null;
 
+    ProgressDialog progressBar;
+
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -53,13 +59,15 @@ public class MainActivity extends AppCompatActivity  {
     };
 
 
-
     private void initView() {
-        play_recordBtn = (Button) findViewById(R.id.btn_playController);
-        status_view = (TextView) findViewById(R.id.status_view);
-        stopBtn = (Button) findViewById(R.id.btn_stop);
         btnSvmTrain = (Button) findViewById(R.id.btn_svm_train);
         btnSvmPredict = (Button) findViewById(R.id.btn_svm_predict);
+
+        progressBar = new ProgressDialog(this);
+        progressBar.setCancelable(false);
+        progressBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressBar.setProgressStyle(0);
+        progressBar.setMax(100);
     }
 
 
@@ -80,64 +88,77 @@ public class MainActivity extends AppCompatActivity  {
 
         audioController = new AudioController(this);
 
-        play_recordBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-                Thread t =  new Thread(new Runnable() {
-
-                    @Override
-                    public void run() {
-
-                        /* 콜백 등록 */
-                        audioController.setOnCompleteExecution(new AudioController.OnCompleteExecution() {
-                            @Override
-                            public void execute(Object obj) {
-                                Log.i(LOG_TAG, " Complete current :: " + current);
-                                current++;
-
-                                handler.sendEmptyMessage(0);
-                            }
-                        });
-
-                        /* 녹음 시작 */
-                        while(true) {
-                            if( AudioController.isRunning()) continue;
-                            audioController.playSoundAndRecord();
-
-                            if( current >= target) break;
-                        }
-                    }
-                });
-
-                t.setPriority(Thread.MAX_PRIORITY);
-                t.start();
-
-
-            }
-        });
-
-        stopBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-                target = -1;
-            }
-        });
-
+        /*****************************************************************
+         * SVM TRAIN
+         *****************************************************************/
         btnSvmTrain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 SenseController s = new SenseController(MainActivity.this);
+
+                s.setSenseListener(new SenseController.SenseListener() {
+                    @Override
+                    public void updateProgress(Integer precent, String message) {
+                        if(precent == 100) {
+                            progressBar.dismiss();
+                            return;
+                        }
+                        progressBar.setProgress(precent);
+                        progressBar.setMessage(message);
+                    }
+                });
+
+                progressBar.show();
                 s.doSense();
             }
         });
 
+
+        /*****************************************************************
+         * SVM PREDICTION
+         *****************************************************************/
         btnSvmPredict.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PredictController p = new PredictController(MainActivity.this);
-                p.doPredict();
+                Toast.makeText(MainActivity.this, " 대기중.... ", Toast.LENGTH_SHORT).show();
+
+
+                // -- 2초후 시작 --
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        PredictController p = new PredictController(MainActivity.this);
+                        p.setAfterPredictionListener(new PredictController.AfterPrediction() {
+                            @Override
+                            public void afterPrediction(Map<String, Double> predictList) {
+
+                                StringBuffer result = new StringBuffer();
+
+                                for (String modelName : predictList.keySet()) {
+                                    result.append(String.format("%s : %f\n", modelName, predictList.get(modelName)));
+                                }
+
+                                AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                                alert.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();     //닫기
+                                    }
+                                });
+
+                                alert.setTitle(" :=: PREDICTION RESULT :=: ");
+                                alert.setMessage(result.toString());
+                                alert.show();
+
+                            }
+                        });
+
+                        p.doPredict();
+                    }
+                }, 2000);
+
+
             }
         });
 
@@ -153,7 +174,7 @@ public class MainActivity extends AppCompatActivity  {
     protected void onStart() {
         super.onStart();
 
-        if(wakeLock != null) {
+        if (wakeLock != null) {
             wakeLock.acquire();
         }
     }
@@ -178,7 +199,7 @@ public class MainActivity extends AppCompatActivity  {
     protected void onDestroy() {
         super.onDestroy();
 
-        if( wakeLock != null) {
+        if (wakeLock != null) {
             wakeLock.release();
         }
     }
