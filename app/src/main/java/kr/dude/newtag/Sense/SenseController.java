@@ -44,7 +44,7 @@ public class SenseController {
 
     /* 녹음 셋트 */
     private int current = 1;
-    private static final int target = 10;
+    private static final int target = 20;
 
     public static interface SenseListener {
         public void updateProgress(Integer precent, String message); // 업데이트 메세지
@@ -106,7 +106,8 @@ public class SenseController {
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                mSenseListener.updateProgress(1, " 소리 녹음중 ... " + String.format("%d/%d", current, target));
+                                int precent = (int) (((double) current/target) * 30);
+                                mSenseListener.updateProgress(precent , " 소리 녹음중 ... " + String.format("%d/%d", current, target));
                             }
                         });
 
@@ -159,7 +160,7 @@ public class SenseController {
 
 
         /* 트레이닝셋끼리 값 주고받음. */
-        SenseEnvironment.trainsetMixer(TRAINING_DIR, TRAINING_FILE_NAME);
+//        SenseEnvironment.trainsetMixer(TRAINING_DIR, TRAINING_FILE_NAME);
 
 
         /* 방금 생성된 피쳐 SVM Training && Model 생성 */

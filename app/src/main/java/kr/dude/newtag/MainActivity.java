@@ -1,6 +1,7 @@
 package kr.dude.newtag;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     PowerManager.WakeLock wakeLock = null;
     PowerManager pm = null;
 
-    ProgressDialog progressBar;
+    ArcProgressDialog progressBar;
 
     Handler handler = new Handler() {
         @Override
@@ -63,11 +64,12 @@ public class MainActivity extends AppCompatActivity {
         btnSvmTrain = (Button) findViewById(R.id.btn_svm_train);
         btnSvmPredict = (Button) findViewById(R.id.btn_svm_predict);
 
-        progressBar = new ProgressDialog(this);
+//        progressBar = new ProgressDialog(this);
+        progressBar = new ArcProgressDialog(this);
         progressBar.setCancelable(false);
-        progressBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progressBar.setProgressStyle(0);
-        progressBar.setMax(100);
+//        progressBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+//        progressBar.setProgressStyle(0);
+//        progressBar.setMax(100);
     }
 
 
@@ -104,8 +106,11 @@ public class MainActivity extends AppCompatActivity {
                             progressBar.dismiss();
                             return;
                         }
-                        progressBar.setProgress(precent);
+                        progressBar.setPercent(precent);
                         progressBar.setMessage(message);
+//                        progressBar.setProgress(precent);
+//                        progressBar.setMessage(message);
+
                     }
                 });
 

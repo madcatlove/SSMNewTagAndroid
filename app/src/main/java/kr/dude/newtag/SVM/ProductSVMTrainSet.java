@@ -23,7 +23,7 @@ public class ProductSVMTrainSet {
     private String result = "";
     private String label;
     private String saveFilePath;
-    private static final int CONCURRENCY_THREAD = 4; // 동시에 돌릴 스레드 갯수
+    private static final int CONCURRENCY_THREAD = 6; // 동시에 돌릴 스레드 갯수
 
     /**
      * Constructor
