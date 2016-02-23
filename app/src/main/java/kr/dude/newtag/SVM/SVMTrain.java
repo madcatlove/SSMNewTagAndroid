@@ -37,7 +37,7 @@ public class SVMTrain {
         param.svm_type = svm_parameter.ONE_CLASS;
         param.kernel_type = svm_parameter.POLY;
         param.degree = 3;
-        param.gamma = 0.00625;	// 1/num_features
+        param.gamma = 0.01041666667;	// 1/num_features
         param.coef0 = 0;
         param.nu = 0.5;
         param.cache_size = 100;
@@ -62,6 +62,10 @@ public class SVMTrain {
 
     public void setSVMParam(svm_parameter param) {
         this.param = param;
+    }
+
+    public svm_parameter getSVMParam() {
+        return param;
     }
 
 

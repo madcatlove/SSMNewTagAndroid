@@ -10,6 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import kr.dude.newtag.AudioAnalyzer.ExtractException;
 import kr.dude.newtag.AudioAnalyzer.FeatureExtractor2;
+import kr.dude.newtag.AudioAnalyzer.FeatureExtractor3;
 
 /**
  * Created by madcat on 2016. 2. 11..
@@ -23,7 +24,14 @@ public class ProductSVMTrainSet {
     private String result = "";
     private String label;
     private String saveFilePath;
-    private static final int CONCURRENCY_THREAD = 6; // 동시에 돌릴 스레드 갯수
+    private static final int CONCURRENCY_THREAD = 3; // 동시에 돌릴 스레드 갯수
+    private ExtractDoneNotifier extractDoneNotifier;
+    private int totalThreadCount = 0;
+
+
+    public static interface ExtractDoneNotifier {
+        public void extractDone(Object obj);
+    }
 
     /**
      * Constructor
@@ -37,6 +45,15 @@ public class ProductSVMTrainSet {
             throw new RuntimeException("No directory");
         }
     }
+
+    /**
+     * DoExtract 스레드가끝날때 실행할 콜백함수
+     * @param notifier
+     */
+    public void setExtractDoneNotifier(ExtractDoneNotifier notifier) {
+        extractDoneNotifier = notifier;
+    }
+
 
     /**
      * SVM 피처 추출후 파일로 내림
@@ -135,10 +152,17 @@ public class ProductSVMTrainSet {
         public void run() {
 
             Log.d(LOG_TAG, " Run thread :: " + filePath);
-            FeatureExtractor2 fe = new FeatureExtractor2(filePath, label);
+//            FeatureExtractor2 fe = new FeatureExtractor2(filePath, label);
+            FeatureExtractor3  fe = new FeatureExtractor3(filePath, label);
             try {
                 String data = fe.getSvmFeature(2);
                 stringAppend(data);
+
+                if( extractDoneNotifier != null) {
+                    synchronized (LOG_TAG) {
+                        extractDoneNotifier.extractDone(this.getName());
+                    }
+                }
             }
             catch(IOException | ExtractException e) {
                 e.printStackTrace();

@@ -42,13 +42,9 @@ public class SenseController {
     private Handler mHandler;
 
 
-    /* 녹음 셋트 */
+    /* (Training Sense) 녹음 셋트 */
     private int current = 1;
-    private static final int target = 20;
-
-    public static interface SenseListener {
-        public void updateProgress(Integer precent, String message); // 업데이트 메세지
-    }
+    private static final int target = 15;
 
 
     public SenseController(Context context) {
@@ -80,8 +76,6 @@ public class SenseController {
             public void execute(Object obj) {
                 Log.i(LOG_TAG, " Complete current :: " + current);
                 current++;
-
-//                Toast.makeText(mContext, String.format("Complete %d/%d", current, target), Toast.LENGTH_SHORT).show();
 
                 if( current > target ) {
                     while(audioController.isRunning()) {;}
@@ -140,10 +134,31 @@ public class SenseController {
         }
 
         /* SVM 피처 생성 */
-        Log.i(LOG_TAG, " EXTRACT SVM FEATURE ");
+        Log.i(LOG_TAG, " EXTRACT FEATURE ");
         final String TRAINING_FILE_NAME = String.format("training%d.train", modelNum);
         ProductSVMTrainSet prod = new ProductSVMTrainSet(RECORDED_DIR, "+1");
         prod.setSaveFilePath(TRAINING_DIR + TRAINING_FILE_NAME);
+
+        /* SVM 피처 생성 ( 피처 생성 스레드 하나가 끝날때마다 이 콜백함수를 호출한다 */
+        prod.setExtractDoneNotifier(new ProductSVMTrainSet.ExtractDoneNotifier() {
+
+            int threadDone = 0;
+
+            @Override
+            public void extractDone(Object obj) {
+                final String threadName = (String) obj;
+                threadDone++;
+
+                if(mSenseListener != null) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mSenseListener.updateProgress(30 + (int)(((double)threadDone/target)*60), String.format("완료.. (%d/%d)", threadDone, target));
+                        }
+                    });
+                }
+            }
+        });
         prod.makeTrainSet();
 
 
@@ -152,7 +167,7 @@ public class SenseController {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    mSenseListener.updateProgress(80, " SVM 모델 생성 시작 ");
+                    mSenseListener.updateProgress(90, " SVM 모델 생성 시작 ");
                 }
             });
 
@@ -162,26 +177,44 @@ public class SenseController {
         /* 트레이닝셋끼리 값 주고받음. */
 //        SenseEnvironment.trainsetMixer(TRAINING_DIR, TRAINING_FILE_NAME);
 
-
-        /* 방금 생성된 피쳐 SVM Training && Model 생성 */
-        Log.i(LOG_TAG, " SVM TRAINING && MAKE MODEL ");
-        final String SCALE_FILE_NAME = String.format("training%d.train.scale", modelNum);
+        /* FOR K-NN algorithm training file을 그냥 모델에 저장 */
+        Log.i(LOG_TAG, " Make KNN fileset ");
         final String MODEL_FILE_NAME = String.format("model%d.model", modelNum);
         try {
-//            SVMScale.scale(TRAINING_DIR + TRAINING_FILE_NAME, TRAINING_DIR + SCALE_FILE_NAME);
-            SVMTrain svmTrain = new SVMTrain();
-            svmTrain.setModelFileName(MODEL_DIR + MODEL_FILE_NAME);
-//            svmTrain.loadProblem(TRAINING_DIR + SCALE_FILE_NAME);
-            svmTrain.loadProblem(TRAINING_DIR + TRAINING_FILE_NAME);
-            svmTrain.doTrain();
 
-            /* 모델 번호 증가 */
+            /* TRAINING_FILE 을 읽어서 모델에 저장 */
+            SenseEnvironment.saveFile(MODEL_DIR + MODEL_FILE_NAME,
+                    SenseEnvironment.fileReadString(TRAINING_DIR + TRAINING_FILE_NAME));
+
+            /* 모델번호 증가 */
             SenseEnvironment.writeModelNumber(modelNum);
-        }
-        catch(IOException e) {
-            Log.e(LOG_TAG, "CANNOT_SCALE OR CANNOT_MAKE_MODEL");
+        } catch(IOException e) {
             e.printStackTrace();
         }
+
+
+
+        /* 방금 생성된 피쳐 SVM Training && Model 생성 */
+//        Log.i(LOG_TAG, " SVM TRAINING && MAKE MODEL ");
+//        final String SCALE_FILE_NAME = String.format("training%d.train.scale", modelNum);
+//        final String MODEL_FILE_NAME = String.format("model%d.model", modelNum);
+//        try {
+//            SVMScale.scale(TRAINING_DIR + TRAINING_FILE_NAME, TRAINING_DIR + SCALE_FILE_NAME);
+//            SVMTrain svmTrain = new SVMTrain();
+//            svmTrain.setModelFileName(MODEL_DIR + MODEL_FILE_NAME);
+
+
+//            svmTrain.loadProblem(TRAINING_DIR + SCALE_FILE_NAME);
+//            svmTrain.loadProblem(TRAINING_DIR + TRAINING_FILE_NAME);
+//            svmTrain.doTrain();
+
+            /* 모델 번호 증가 */
+//            SenseEnvironment.writeModelNumber(modelNum);
+//        }
+//        catch(IOException e) {
+//            Log.e(LOG_TAG, "CANNOT_SCALE OR CANNOT_MAKE_MODEL");
+//            e.printStackTrace();
+//        }
 
 
 
@@ -198,35 +231,35 @@ public class SenseController {
         }
 
         /* 이전에 생성된 트레이닝 파일이 변경되었으므로 모델 재생성 */
-        List<File> oldTrainSet = SenseEnvironment.getAllTrainFiles(TRAINING_DIR);
-        for( File oldTrainFile : oldTrainSet) {
-            if( oldTrainFile.getName().equals(TRAINING_FILE_NAME) ) {
-                // 방금전에 생성된 파일이므로 패스
-                continue;
-            }
-
-            // 모델번호 추출해옴
-            final String regex = "^training(\\d+)\\.train$";
-            Pattern p = Pattern.compile(regex);
-            Matcher mat = p.matcher(oldTrainFile.getName());
-
-            if(mat.find()) {
-                int _modelNum = Integer.valueOf( mat.group(1) );
-                try {
-                    String OVERWRITE_MODEL_NAME = String.format("model%d.model", _modelNum);
-
-                    SVMTrain svmTrain = new SVMTrain();
-                    svmTrain.setModelFileName(MODEL_DIR + OVERWRITE_MODEL_NAME);
-                    svmTrain.loadProblem(TRAINING_DIR + oldTrainFile.getName());
-                    svmTrain.doTrain();
-                }
-                catch(IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-
-        }
+//        List<File> oldTrainSet = SenseEnvironment.getAllTrainFiles(TRAINING_DIR);
+//        for( File oldTrainFile : oldTrainSet) {
+//            if( oldTrainFile.getName().equals(TRAINING_FILE_NAME) ) {
+//                 방금전에 생성된 파일이므로 패스
+//                continue;
+//            }
+//
+//             모델번호 추출해옴
+//            final String regex = "^training(\\d+)\\.train$";
+//            Pattern p = Pattern.compile(regex);
+//            Matcher mat = p.matcher(oldTrainFile.getName());
+//
+//            if(mat.find()) {
+//                int _modelNum = Integer.valueOf( mat.group(1) );
+//                try {
+//                    String OVERWRITE_MODEL_NAME = String.format("model%d.model", _modelNum);
+//
+//                    SVMTrain svmTrain = new SVMTrain();
+//                    svmTrain.setModelFileName(MODEL_DIR + OVERWRITE_MODEL_NAME);
+//                    svmTrain.loadProblem(TRAINING_DIR + oldTrainFile.getName());
+//                    svmTrain.doTrain();
+//                }
+//                catch(IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//
+//        }
 
 
         /* 웨이브파일 모두 삭제 */

@@ -1,14 +1,11 @@
 package kr.dude.newtag.AudioAnalyzer;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 /**
- * Created by madcat on 2016. 2. 11..
+ * Created by madcat on 2016. 2. 23..
  */
+
 import java.io.IOException;
 import java.util.ArrayList;
-
 
 /**
  *
@@ -16,7 +13,7 @@ import java.util.ArrayList;
  * @brief StdAudio에서 읽어들인 .wav 파일을 FFT 가능한 배열 형태로 변환하는 클래스
  * @see StdAudio
  */
-public class FeatureExtractor2 {
+public class FeatureExtractor3 {
 
     private static final int WINDOW_SIZE = 512;
     private static final int SYNC_LENGTH = 500;
@@ -50,7 +47,7 @@ public class FeatureExtractor2 {
     int[] arrFreq = { 11000, 12000, 15000, 18000, 20000 };
     int[] arrTargetFreqSamplePos;
 
-    public FeatureExtractor2(String filePath, String label) {
+    public FeatureExtractor3(String filePath, String label) {
         this.filePath = filePath;
         this.label = label;
         arrTargetFreqSamplePos = new int[arrFreq.length];
@@ -295,11 +292,15 @@ public class FeatureExtractor2 {
         normalize(mixedSvmFeature, 0, mixedSvmFeature.length);
 
         for (int i = 0; i < mixedSvmFeature.length; i++) {
-            svmFeature = svmFeature + Integer.toString(prefix) + ":" + Double.toString(mixedSvmFeature[i]) + " ";
+            // svmFeature = svmFeature + Integer.toString(prefix) + ":" + Double.toString(mixedSvmFeature[i]) + " ";
+            svmFeature = svmFeature + Double.toString(mixedSvmFeature[i]);
+            if( i < mixedSvmFeature.length -1) {
+                svmFeature += ",";
+            }
             prefix++;
         }
 
-        svmFeature = label + " " + svmFeature;
+        // svmFeature = label + " " + svmFeature;
         System.out.println("SVM Feature: ");
         System.out.println(svmFeature);
         return svmFeature;

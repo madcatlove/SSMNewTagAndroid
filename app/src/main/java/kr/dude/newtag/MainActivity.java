@@ -32,6 +32,7 @@ import kr.dude.newtag.SVM.SVMTrain;
 import kr.dude.newtag.SVM.Util;
 import kr.dude.newtag.Sense.PredictController;
 import kr.dude.newtag.Sense.SenseController;
+import kr.dude.newtag.Sense.SenseListener;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -85,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
         // wake lock
         pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "MY_WAKELOCK");
+        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "MY_WAKELOCK");
 
 
         audioController = new AudioController(this);
@@ -97,25 +98,34 @@ public class MainActivity extends AppCompatActivity {
         btnSvmTrain.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SenseController s = new SenseController(MainActivity.this);
+                Toast.makeText(MainActivity.this, " 대기중.... ", Toast.LENGTH_SHORT).show();
+                toggleButton();
 
-                s.setSenseListener(new SenseController.SenseListener() {
+                handler.postDelayed(new Runnable() {
                     @Override
-                    public void updateProgress(Integer precent, String message) {
-                        if(precent == 100) {
-                            progressBar.dismiss();
-                            return;
-                        }
-                        progressBar.setPercent(precent);
-                        progressBar.setMessage(message);
-//                        progressBar.setProgress(precent);
-//                        progressBar.setMessage(message);
+                    public void run() {
+                        SenseController s = new SenseController(MainActivity.this);
+                        s.setSenseListener(new SenseListener() {
+                            @Override
+                            public void updateProgress(Integer precent, String message) {
+                                if (precent == 100) {
+                                    progressBar.dismiss();
+                                    toggleButton();
+                                    return;
+                                }
+                                progressBar.setPercent(precent);
+                                progressBar.setMessage(message);
 
+
+                            }
+                        });
+
+                        progressBar.setTitleView("TRAINING...");
+                        progressBar.show();
+                        s.doSense();
                     }
-                });
+                }, 2000);
 
-                progressBar.show();
-                s.doSense();
             }
         });
 
@@ -127,21 +137,38 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this, " 대기중.... ", Toast.LENGTH_SHORT).show();
-
+                toggleButton();
 
                 // -- 2초후 시작 --
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         PredictController p = new PredictController(MainActivity.this);
+
+                        /* 진행중.. */
+                        p.setSenseListener(new SenseListener() {
+                            @Override
+                            public void updateProgress(Integer precent, String message) {
+                                if (precent == 100) {
+                                    progressBar.dismiss();
+                                    toggleButton();
+                                    return;
+                                }
+                                progressBar.setPercent(precent);
+                                progressBar.setMessage(message);
+                            }
+                        });
+
+
+                        /* PREDICTION 다 끝났을때.. */
                         p.setAfterPredictionListener(new PredictController.AfterPrediction() {
                             @Override
-                            public void afterPrediction(Map<String, Double> predictList) {
+                            public void afterPrediction(Map<String, Integer> predictList) {
 
                                 StringBuffer result = new StringBuffer();
 
                                 for (String modelName : predictList.keySet()) {
-                                    result.append(String.format("%s : %f\n", modelName, predictList.get(modelName)));
+                                    result.append(String.format("%s : %d\n", modelName, predictList.get(modelName)));
                                 }
 
                                 AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
@@ -159,6 +186,10 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
 
+
+                        /* 시작 */
+                        progressBar.setTitleView("PREDICTION...");
+                        progressBar.show();
                         p.doPredict();
                     }
                 }, 2000);
@@ -173,6 +204,11 @@ public class MainActivity extends AppCompatActivity {
 //        startService(tiltService);
 
 
+    }
+
+    public void toggleButton() {
+        btnSvmPredict.setEnabled( !btnSvmPredict.isEnabled());
+        btnSvmTrain.setEnabled( !btnSvmTrain.isEnabled() );
     }
 
     @Override

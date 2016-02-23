@@ -20,11 +20,16 @@ public class ArcProgressDialog extends Dialog {
 
     private TextView messageView;
     private ArcProgress arcProgress;
+    private TextView titleView;
 
     public ArcProgressDialog(Context context) {
         super(context);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.customdialog);
+
+        messageView = (TextView) findViewById(R.id.progress_message);
+        arcProgress = (ArcProgress) findViewById(R.id.arcprogress);
+        titleView = (TextView) findViewById(R.id.progress_title);
     }
 
     @Override
@@ -33,8 +38,6 @@ public class ArcProgressDialog extends Dialog {
 
         this.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
-        messageView = (TextView) findViewById(R.id.progress_message);
-        arcProgress = (ArcProgress) findViewById(R.id.arcprogress);
     }
 
     public void setMessage(String message) {
@@ -43,6 +46,10 @@ public class ArcProgressDialog extends Dialog {
 
     public void setPercent(Integer percent) {
         arcProgress.setProgress(percent);
+    }
+
+    public void setTitleView(String title) {
+        titleView.setText(title);
     }
 
 
