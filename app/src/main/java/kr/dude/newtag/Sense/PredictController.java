@@ -220,25 +220,38 @@ public class PredictController {
         KNNPredict predict = new KNNPredict();
         predict.loadModels(MODEL_DIR, models);
 
-        /* 4C2 조합 */
-        int[][] comb = {
-                {0,1}, {0,2}, {0,3},
-                {1,2}, {1,3}, {2,3}
-        };
+
 
         /* features 압축 */
         List<String> compressedFeatures = new ArrayList<String>();
-        for(int i = 0; i < features.size(); i += 2) {
-            String first = features.get( i );
-            String second = features.get( i+1 );
-
-            String compressedMean = meanFeature(first,second);
 
 
-            Log.e(LOG_TAG, " Compressed Feature :: " + compressedMean);
-            /* 평균된 피처 새로 넣음 */
-            compressedFeatures.add(compressedMean);
+        /* nC2 구현 */
+        for(int i = 0; i < features.size(); i++) {
+            for(int j = i+1; j < features.size(); j++) {
+                String first = features.get(i);
+                String second = features.get(j);
+
+                String compressedMean = meanFeature(first,second);
+
+                Log.e(LOG_TAG, String.format(" Compress(%d,%d) features => %s", i,j,compressedMean));
+
+                /* 평균된 피처 새로 넣음 */
+                compressedFeatures.add(compressedMean);
+            }
         }
+
+//        for(int i = 0; i < features.size(); i += 2) {
+//            String first = features.get( i );
+//            String second = features.get( i+1 );
+//
+//            String compressedMean = meanFeature(first,second);
+//
+//
+//            Log.e(LOG_TAG, " Compressed Feature :: " + compressedMean);
+//            /* 평균된 피처 새로 넣음 */
+//            compressedFeatures.add(compressedMean);
+//        }
 
         HashMap<String,Integer> predictCount = predict.validation(compressedFeatures);
 
@@ -329,7 +342,7 @@ public class PredictController {
 
         StringBuilder b = new StringBuilder();
         for(int k = 0; k < v_first.length; k++) {
-            compressed[k] = ( Double.valueOf(v_first[k]) + Double.valueOf(v_second[k]) ) / 2.0;
+            compressed[k] = ( Double.valueOf(v_first[k]) + Double.valueOf(v_second[k]) ) / 2.0d;
             b.append(compressed[k]);
             if( k < v_first.length-1) {
                 b.append(",");
